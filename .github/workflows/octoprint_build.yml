@@ -2,16 +2,12 @@ name: Build OctoPrint Firmware
 
 on:
   push:
-    # Trigger 1: Änderungen am Code im spezifischen Unterordner
     paths:
       - 'firmware/octoprint/**'
     branches:
       - main
-    # Trigger 2: Erstellung eines Versions-Tags (löst auch das Release aus)
     tags:
       - 'v*'
-  
-  # Erlaubt es, den Build manuell im GitHub-Interface zu starten
   workflow_dispatch:
 
 jobs:
@@ -20,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [drucker_1, drucker_2, drucker_3]
+        # Achte darauf, dass diese Namen exakt mit der platformio.ini übereinstimmen
+        environment: [octo_drucker_1, octo_drucker_2, octo_drucker_3]
 
     steps:
       - name: Checkout Code
@@ -45,9 +42,10 @@ jobs:
         env:
           WIFI_SSID: ${{ secrets.WIFI_SSID }}
           WIFI_PASS: ${{ secrets.WIFI_PASS }}
-          API_KEY_D1: ${{ secrets.API_KEY_D1 }}
-          API_KEY_D2: ${{ secrets.API_KEY_D2 }}
-          API_KEY_D3: ${{ secrets.API_KEY_D3 }}
+          # Mappings der GitHub Secrets auf die PlatformIO System-Variablen
+          OCTO_API_KEY_D1: ${{ secrets.OCTO_API_KEY_D1 }}
+          OCTO_API_KEY_D2: ${{ secrets.OCTO_API_KEY_D2 }}
+          OCTO_API_KEY_D3: ${{ secrets.OCTO_API_KEY_D3 }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -57,7 +55,6 @@ jobs:
 
   release:
     needs: build
-    # Läuft nur, wenn ein Tag gepusht wurde
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -65,14 +62,22 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare Release Assets
+        run: |
+          mv ./artifacts/firmware-octo_drucker_1/firmware.bin ./octo_drucker_1.bin
+          mv ./artifacts/firmware-octo_drucker_2/firmware.bin ./octo_drucker_2.bin
+          mv ./artifacts/firmware-octo_drucker_3/firmware.bin ./octo_drucker_3.bin
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            firmware-drucker_1/firmware.bin
-            firmware-drucker_2/firmware.bin
-            firmware-drucker_3/firmware.bin
-          body: "Automatischer Build der OctoPrint-Variante für Version ${{ github.ref_name }}"
+            ./octo_drucker_1.bin
+            ./octo_drucker_2.bin
+            ./octo_drucker_3.bin
+          body: "Automatischer Build der OctoPrint-Varianten für Version ${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
