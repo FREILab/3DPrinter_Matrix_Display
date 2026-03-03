@@ -6,26 +6,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false 
       matrix:
-        environment: [drucker_1, drucker_2, drucker_3] # Hier werden 3 parallele Jobs gestartet
+        environment: [drucker_1, drucker_2, drucker_3]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Cache PlatformIO
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-platformio
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -34,6 +37,7 @@ jobs:
 
       - name: Run PlatformIO Build
         run: pio run -e ${{ matrix.environment }}
+        working-directory: firmware/octoprint
         env:
           WIFI_SSID: ${{ secrets.WIFI_SSID }}
           WIFI_PASS: ${{ secrets.WIFI_PASS }}
@@ -42,7 +46,7 @@ jobs:
           API_KEY_D3: ${{ secrets.API_KEY_D3 }}
 
       - name: Upload Binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}
-          path: .pio/build/${{ matrix.environment }}/firmware.bin
+          path: firmware/octoprint/.pio/build/${{ matrix.environment }}/firmware.bin
