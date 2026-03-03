@@ -1,4 +1,4 @@
-name: Build Multi-Printer Firmware
+name: octoprint_build
 
 on: [push]
 
