@@ -7,7 +7,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - 'prusa-v*'
   workflow_dispatch:
 
 jobs:
