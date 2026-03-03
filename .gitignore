@@ -2,3 +2,4 @@
 .DS_Store
 Software/secrets/*
 firmware/octoprint/include/secret.h
+firmware/prusalink/include/secret.h

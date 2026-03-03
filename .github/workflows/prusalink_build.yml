@@ -1,0 +1,78 @@
+name: Build PrusaLink Firmware
+
+on:
+  push:
+    paths:
+      - 'firmware/prusalink/**'
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [prusa_drucker_4, prusa_drucker_5]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install -U platformio
+
+      - name: Create dummy secret.h if missing
+        run: |
+          mkdir -p firmware/prusalink/include
+          touch firmware/prusalink/include/secret.h
+
+      - name: Run PlatformIO Build
+        working-directory: firmware/prusalink
+        run: pio run -e ${{ matrix.environment }}
+        env:
+          WIFI_SSID: ${{ secrets.WIFI_SSID }}
+          WIFI_PASS: ${{ secrets.WIFI_PASS }}
+          PRUSA_API_KEY_D4: ${{ secrets.PRUSA_API_KEY_D4 }}
+          PRUSA_API_KEY_D5: ${{ secrets.PRUSA_API_KEY_D5 }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.environment }}
+          path: firmware/prusalink/.pio/build/${{ matrix.environment }}/firmware.bin
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare Release Assets
+        run: |
+          mv ./artifacts/firmware-prusa_drucker_4/firmware.bin ./prusa_drucker_4.bin
+          mv ./artifacts/firmware-prusa_drucker_5/firmware.bin ./prusa_drucker_5.bin
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./prusa_drucker_4.bin
+            ./prusa_drucker_5.bin
+          body: "Automatischer Build der PrusaLink-Varianten für Version ${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
