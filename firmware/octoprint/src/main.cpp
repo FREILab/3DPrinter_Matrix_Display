@@ -4,7 +4,36 @@
 #include "secret.h"
 #include <OctoPrintAPI.h>          
 #include <Adafruit_Protomatter.h>  
-#include <esp_task_wdt.h>          
+#include <esp_task_wdt.h>  
+#include "config.h"    
+#if __has_include("secret.h")
+    #include "secret.h"
+#endif
+
+// 1. Lokale secret.h einbinden, falls vorhanden
+#if __has_include("secret.h")
+    #include "secret.h"
+#endif
+
+// 2. WiFi Logik: Priorität auf secret.h, sonst CI-Flags (WIFI_SSID_ENV kommt aus ini)
+#ifndef SECRET_SSID
+    #define SECRET_SSID WIFI_SSID_ENV
+#endif
+#ifndef SECRET_PASS
+    #define SECRET_PASS WIFI_PASS_ENV
+#endif
+
+// 3. API Key Logik: Nutze PRINTER_API_KEY (aus ini) falls SECRET_API nicht in secret.h definiert
+#ifndef SECRET_API
+    #define SECRET_API PRINTER_API_KEY
+#endif
+
+// Zuweisung der finalen Variablen (NUR EINMAL definieren!)
+const char* ssid = SECRET_SSID;
+const char* password = SECRET_PASS;
+const char* octoprint_apikey = SECRET_API;
+const char* ip_address = PRINTER_IP; // Kommt direkt aus der platformio.ini
+const int octoprint_httpPort = 5000;
 
 // --- Konfiguration ---
 #define HEIGHT 32   
@@ -27,10 +56,6 @@ void displayPrinterPrinting(int seconds, float progress, int temp_T0, int temp_T
 int scaleFloatToInteger(float value);
 void printOctoprintDebug();
 
-// --- Globale Objekte ---
-const char* ip_address = CONFIG_IP;
-const char* octoprint_apikey = SECRET_API;
-const int octoprint_httpPort = CONFIG_PORT;
 
 IPAddress ip;
 WiFiClient client;
