@@ -59,12 +59,6 @@ String octoprint_apikey = SECRET_API;  //See top of file or GIT Readme about get
 // Initialize OctoPrint API
 OctoprintApi api(client, ip, octoprint_httpPort, octoprint_apikey);
 
-unsigned long wifiLostSince = 0;
-bool wifiWasOffline = false;
-
-unsigned long octoprintLostSince = 0;
-bool octoprintWasOffline = false;
-
 
 const int tempGood_T0 = 50; // below this temperature T0 is considered cool
 const int tempGood_T1 = 50; // below this temperature T1 is considered cool
@@ -111,61 +105,44 @@ void loop() {
   if (currentMillis - previousMillis >= CHECK_INTERVAL) {
     previousMillis = currentMillis;
 
-    // === WLAN-Verbindung prüfen ===
     if (WiFi.status() != WL_CONNECTED) {
+      displayWiFiOffline();
       Serial.println("[WiFi] Wi-Fi lost. Reconnecting...");
-
-      if (!wifiWasOffline) {
-        wifiLostSince = currentMillis;
-        wifiWasOffline = true;
-      } else if (currentMillis - wifiLostSince >= 3000) {
-        displayWiFiOffline(); // nur wenn länger als 3s weg
-        reconnectWiFi();
-      }
-      return; // ohne WLAN keine API
+      reconnectWiFi();
     } else {
-      wifiWasOffline = false;
-    }
+      Serial.println("[WiFi] Wi-Fi active");
 
-    Serial.println("[WiFi] Wi-Fi active");
+      // printOctoprintDebug();
 
-    // === OctoPrint-Verbindung prüfen ===
-    if (api.getPrinterStatistics()) {
-      octoprintWasOffline = false;
+      // Check on Octoprint
+      if (api.getPrinterStatistics()) {
+        Serial.println("[OctoPrint] Octoprint active");
 
-      // State: printer ready (operational + ready)
-      if (api.printerStats.printerStateoperational && api.printerStats.printerStateready) {
-        displayPrinterReady(api.printerStats.printerTool0TempActual, api.printerStats.printerBedTempActual);
-      }
-
-      // State printer printing (operational + printing)
-      if (api.printerStats.printerStateoperational && api.printerStats.printerStatePrinting) {
-        if (api.getPrintJob()) {
-          float progress = (float)api.printJob.progressPrintTime /
-                          ((float)api.printJob.progressPrintTime + (float)api.printJob.progressPrintTimeLeft);
+        // State: printer ready (operational + ready)
+        if (api.printerStats.printerStateoperational && api.printerStats.printerStateready) {
+          // Printer is ready
+          displayPrinterReady(api.printerStats.printerTool0TempActual, api.printerStats.printerBedTempActual);
+        }
+        // State printer printing (operational + printing)
+        if (api.printerStats.printerStateoperational && api.printerStats.printerStatePrinting) {
+          // Printer is printing
+          // get job status
+          api.getPrintJob();
+          float progress = (float)api.printJob.progressPrintTime / ((float)api.printJob.progressPrintTime + (float)api.printJob.progressPrintTimeLeft);
 
           displayPrinterPrinting(
             api.printJob.progressPrintTimeLeft,
             progress,
             api.printerStats.printerTool0TempActual,
             api.printerStats.printerBedTempActual);
-        } else {
-          Serial.println("[OctoPrint] PrintJob-API offline (aber PrinterStats da)");
         }
-      }
 
-    } else {
-      Serial.println("[OctoPrint] OctoPrint offline");
-
-      if (!octoprintWasOffline) {
-        octoprintLostSince = currentMillis;
-        octoprintWasOffline = true;
-      } else if (currentMillis - octoprintLostSince >= 3000) {
-        displayOctoprintOffline(); // nur nach 3s zeigen
+      } else {
+        Serial.println("[OctoPrint] Octoprint offline");
+        displayWiFiOffline();
       }
     }
   }
-
   // Feed the watchdog to prevent a reset
   esp_task_wdt_reset();
 }
