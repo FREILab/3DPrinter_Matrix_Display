@@ -35,6 +35,11 @@ jobs:
       - name: Install PlatformIO
         run: pip install -U platformio
 
+      - name: Create dummy secret.h if missing
+        run: |
+          mkdir -p firmware/octoprint/include
+          touch firmware/octoprint/include/secret.h
+
       - name: Run PlatformIO Build
         run: pio run -e ${{ matrix.environment }}
         working-directory: firmware/octoprint
