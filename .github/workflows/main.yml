@@ -37,6 +37,7 @@ jobs:
 
       - name: Run PlatformIO Build
         run: pio run -e ${{ matrix.environment }}
+        working-directory: firmware/octoprint
         env:
           WIFI_SSID: ${{ secrets.WIFI_SSID }}
           WIFI_PASS: ${{ secrets.WIFI_PASS }}
@@ -48,4 +49,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}
-          path: .pio/build/${{ matrix.environment }}/firmware.bin
+          path: firmware/octoprint/.pio/build/${{ matrix.environment }}/firmware.bin
