@@ -5,17 +5,15 @@
 #include <OctoPrintAPI.h>          
 #include <Adafruit_Protomatter.h>  
 #include <esp_task_wdt.h>  
-#include "config.h"    
+#include "config.h"
+
+// Der Trick: Nur includen, wenn die Datei wirklich physisch da ist
 #if __has_include("secret.h")
-    #include "secret.h"
+  #include "secret.h"
+  #define HAS_SECRET_FILE
 #endif
 
-// 1. Lokale secret.h einbinden, falls vorhanden
-#if __has_include("secret.h")
-    #include "secret.h"
-#endif
-
-// 2. WiFi Logik: Priorität auf secret.h, sonst CI-Flags (WIFI_SSID_ENV kommt aus ini)
+// 2. WiFi Logik: Fallback auf CI-Flags, falls Makros nicht durch secret.h definiert wurden
 #ifndef SECRET_SSID
     #define SECRET_SSID WIFI_SSID_ENV
 #endif
@@ -23,7 +21,7 @@
     #define SECRET_PASS WIFI_PASS_ENV
 #endif
 
-// 3. API Key Logik: Nutze PRINTER_API_KEY (aus ini) falls SECRET_API nicht in secret.h definiert
+// 3. API Key Logik
 #ifndef SECRET_API
     #define SECRET_API PRINTER_API_KEY
 #endif
