@@ -28,6 +28,19 @@
     #define SECRET_PASS WIFI_PASS_ENV
 #endif
 
+#ifndef SECRET_PRUSA_API_KEY
+    #define SECRET_PRUSA_API_KEY PRUSA_API_KEY
+#endif
+#ifndef CONFIG_IP
+    #define CONFIG_IP PRINTER_IP
+#endif
+#ifndef CONFIG_NAME
+    #define CONFIG_NAME CONFIG_NAME_STR
+#endif
+#ifndef CONFIG_PORT
+    #define CONFIG_PORT 80
+#endif
+
 #include "PrusaLinkAPI.h"
 #include <Adafruit_Protomatter.h>
 #include <esp_task_wdt.h>
