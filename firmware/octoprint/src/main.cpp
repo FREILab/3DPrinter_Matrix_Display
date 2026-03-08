@@ -57,7 +57,7 @@ void printOctoprintDebug();
 
 IPAddress ip;
 WiFiClient client;
-OctoprintApi api(client, ip, octoprint_httpPort, octoprint_apikey);
+OctoprintApi* api;
 
 Adafruit_Protomatter matrix(
   WIDTH, 4, 1, rgbPins, sizeof(addrPins), addrPins,
@@ -68,7 +68,11 @@ const unsigned long requestInterval = 5000;
 
 void setup() {
   Serial.begin(115200);
+  // wait for USB debug
+  delay(3000);
+  
   ip.fromString(ip_address);
+  api = new OctoprintApi(client, ip, octoprint_httpPort, octoprint_apikey);
 
   // Watchdog Setup für ESP32
   esp_task_wdt_init(5, true); 
@@ -93,20 +97,20 @@ void loop() {
     lastRequestTime = currentMillis;
 
     // 1. Drucker-Status abrufen
-    if (api.getPrinterStatistics()) {
-      int temp_T0 = scaleFloatToInteger(api.printerStats.printerTool0TempActual);
-      int temp_T1 = scaleFloatToInteger(api.printerStats.printerBedTempActual);
+    if (api->getPrinterStatistics()) {
+      int temp_T0 = scaleFloatToInteger(api->printerStats.printerTool0TempActual);
+      int temp_T1 = scaleFloatToInteger(api->printerStats.printerBedTempActual);
 
-      if (api.printerStats.printerStatePrinting) {
+      if (api->printerStats.printerStatePrinting) {
         // 2. Job-Daten abrufen (Name bei chunkysteveo: getPrintJob)
-        if (api.getPrintJob()) { 
+        if (api->getPrintJob()) { 
           displayPrinterPrinting(
-            api.printJob.estimatedPrintTime, 
-            api.printJob.progressCompletion, 
+            api->printJob.estimatedPrintTime, 
+            api->printJob.progressCompletion, 
             temp_T0, temp_T1
           );
         }
-      } else if (api.printerStats.printerStateready) {
+      } else if (api->printerStats.printerStateready) {
         displayPrinterReady(temp_T0, temp_T1);
       }
       printOctoprintDebug();
@@ -199,15 +203,15 @@ void displayPrinterPrinting(int seconds, float progress, int temp_T0, int temp_T
 void printOctoprintDebug() {
   // Hier nutzen wir die Namen der chunkysteveo Library
   Serial.println("\n---------States---------");
-  Serial.print("State: "); Serial.println(api.printerStats.printerState);
-  Serial.print("Printing: "); Serial.println(api.printerStats.printerStatePrinting);
+  Serial.print("State: "); Serial.println(api->printerStats.printerState);
+  Serial.print("Printing: "); Serial.println(api->printerStats.printerStatePrinting);
   
-  if (api.printerStats.printerStatePrinting) {
-    Serial.print("Progress: "); Serial.print(api.printJob.progressCompletion); Serial.println("%");
-    Serial.print("Time Left: "); Serial.print(api.printJob.estimatedPrintTime); Serial.println("s");
+  if (api->printerStats.printerStatePrinting) {
+    Serial.print("Progress: "); Serial.print(api->printJob.progressCompletion); Serial.println("%");
+    Serial.print("Time Left: "); Serial.print(api->printJob.estimatedPrintTime); Serial.println("s");
   }
   
-  Serial.print("Tool0: "); Serial.println(api.printerStats.printerTool0TempActual);
-  Serial.print("Bed:   "); Serial.println(api.printerStats.printerBedTempActual);
+  Serial.print("Tool0: "); Serial.println(api->printerStats.printerTool0TempActual);
+  Serial.print("Bed:   "); Serial.println(api->printerStats.printerBedTempActual);
   Serial.println("------------------------\n");
 }
