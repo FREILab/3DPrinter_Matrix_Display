@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "OTA: Upload all printers (1-4)",
+      "type": "shell",
+      "command": "for e in prusa_drucker_1_ota prusa_drucker_2_ota prusa_drucker_3_ota prusa_drucker_4_ota; do echo \"==> Upload $e\"; pio run -e \"$e\" -t upload || exit 1; done",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
