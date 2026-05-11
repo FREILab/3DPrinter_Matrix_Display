@@ -144,6 +144,7 @@ void drawTinyGlyph(char c, int x, int y, uint16_t color);
 void drawTinyText(const String &text, int x, int y, uint16_t color);
 bool isPrinterUnavailableState(const char *state);
 bool isIpShowButtonPressed();
+bool isNozzleTempUnavailable(int temp);
 int scaleFloatToInteger(float progress);
 void printPrusaLinkDebug();
 // ---------------------------
@@ -319,6 +320,11 @@ bool isPrinterUnavailableState(const char *state) {
          || (strcmp(state, "UNKNOWN") == 0)
          || (strcmp(state, "DISCONNECTED") == 0)
          || (strcmp(state, "N/A") == 0);
+}
+
+bool isNozzleTempUnavailable(int temp) {
+  // Prusa XL reports 6C when no tool head is active (parked).
+  return temp == 6;
 }
 
 void setupOta() {
@@ -599,19 +605,26 @@ void displayPrinterPrinting(int seconds, float progress, int temp_T0, int temp_B
   matrix.drawRect(1, 20, 62, 1, matrix.color565(255, 255, 255));  // white
 
   // Display T0 (Nozzle)
-  if (temp_T0 < 10) textX = 16;
+  if (isNozzleTempUnavailable(temp_T0)) textX = 14;
+  else if (temp_T0 < 10) textX = 16;
   else if (temp_T0 < 100) textX = 10;
   else textX = 4;
   textY = 23;
-  if (temp_T0 >= tempGood_T0) matrix.setTextColor(matrix.color565(255, 0, 0));  // red
-  else matrix.setTextColor(matrix.color565(0, 255, 0));                         // green
+  if (isNozzleTempUnavailable(temp_T0)) {
+    matrix.setTextColor(0xFFFF);  // white
+  } else if (temp_T0 >= tempGood_T0) matrix.setTextColor(matrix.color565(255, 0, 0));  // red
+  else matrix.setTextColor(matrix.color565(0, 255, 0));                                 // green
   matrix.setCursor(textX, textY);
-  matrix.print(temp_T0);
-  // display "°C" for T0
-  matrix.setTextColor(matrix.color565(255, 255, 255));  // white
-  matrix.setCursor(26, 23);
-  matrix.print("C");
-  matrix.drawCircle(24, 23, 1, matrix.color565(255, 255, 255));  // white
+  if (isNozzleTempUnavailable(temp_T0)) {
+    matrix.print("-");
+  } else {
+    matrix.print(temp_T0);
+    // display "°C" for T0
+    matrix.setTextColor(matrix.color565(255, 255, 255));  // white
+    matrix.setCursor(26, 23);
+    matrix.print("C");
+    matrix.drawCircle(24, 23, 1, matrix.color565(255, 255, 255));  // white
+  }
 
   // Display Slash
   matrix.setCursor(33, 23);
@@ -665,19 +678,26 @@ void displayPrinterReady(int temp_T0, int temp_Bed) {
   matrix.drawRect(1, 20, 62, 1, matrix.color565(255, 255, 255));  // white
 
   // Display T0 (Nozzle)
-  if (temp_T0 < 10) textX = 16;
+  if (isNozzleTempUnavailable(temp_T0)) textX = 14;
+  else if (temp_T0 < 10) textX = 16;
   else if (temp_T0 < 100) textX = 10;
   else textX = 4;
   textY = 23;
-  if (temp_T0 >= tempGood_T0) matrix.setTextColor(matrix.color565(255, 0, 0));  // red
-  else matrix.setTextColor(matrix.color565(0, 255, 0));                         // green
+  if (isNozzleTempUnavailable(temp_T0)) {
+    matrix.setTextColor(0xFFFF);  // white
+  } else if (temp_T0 >= tempGood_T0) matrix.setTextColor(matrix.color565(255, 0, 0));  // red
+  else matrix.setTextColor(matrix.color565(0, 255, 0));                                 // green
   matrix.setCursor(textX, textY);
-  matrix.print(temp_T0);
-  // display "°C" for T0
-  matrix.setTextColor(matrix.color565(255, 255, 255));  // white
-  matrix.setCursor(26, 23);
-  matrix.print("C");
-  matrix.drawCircle(24, 23, 1, matrix.color565(255, 255, 255));  // white
+  if (isNozzleTempUnavailable(temp_T0)) {
+    matrix.print("-");
+  } else {
+    matrix.print(temp_T0);
+    // display "°C" for T0
+    matrix.setTextColor(matrix.color565(255, 255, 255));  // white
+    matrix.setCursor(26, 23);
+    matrix.print("C");
+    matrix.drawCircle(24, 23, 1, matrix.color565(255, 255, 255));  // white
+  }
 
   // Display Slash
   matrix.setCursor(33, 23);
