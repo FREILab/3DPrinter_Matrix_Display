@@ -15,6 +15,7 @@
 
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <ArduinoOTA.h>
 
 #if __has_include("secret.h")
     #include "secret.h"
@@ -39,6 +40,10 @@
 #endif
 #ifndef CONFIG_PORT
     #define CONFIG_PORT 80
+#endif
+
+#ifndef OTA_HOSTNAME_PREFIX
+  #define OTA_HOSTNAME_PREFIX "matrix-display"
 #endif
 
 #include "PrusaLinkAPI.h"
@@ -113,12 +118,18 @@ const int tempGood_Bed = 50;  // below this temperature Bed is considered cool
 const unsigned long IP_BUTTON_AFTERGLOW_MS = 3000;
 
 unsigned long showIpUntil = 0;
+bool otaInitialized = false;
+bool otaUpdateInProgress = false;
 
 
 // --- Funktionsprototypen ---
 void displayWiFiOffline();
 void connectToWiFi();
 void reconnectWiFi();
+void setupOta();
+void handleOta();
+void displayOtaUpdating();
+void setLightWhite();
 void displayPrinterPrinting(int time_left, float progress, int tool_temp, int bed_temp);
 void displayPrinterReady(int tool_temp, int bed_temp);
 void displayPrusaLinkOffline();
@@ -171,9 +182,13 @@ void setup() {
 
   // connect to WiFi
   connectToWiFi();
+
   // Initialize the watchdog timer
   esp_task_wdt_init(5, true); // 5 Sekunden Timeout, true = Panic Reset bei Hänger
   esp_task_wdt_add(NULL);     // Fügt den aktuellen Task zur Überwachung hinzu
+
+  // OTA can start only once Wi-Fi is connected.
+  setupOta();
 }
 
 /**
@@ -185,6 +200,13 @@ void setup() {
  */
 void loop() {
   unsigned long currentMillis = millis();
+
+  handleOta();
+  if (otaUpdateInProgress) {
+    displayOtaUpdating();
+    esp_task_wdt_reset();
+    return;
+  }
 
   // IP button: show IP while pressed and keep it visible for a short afterglow.
   if (isIpShowButtonPressed()) {
@@ -295,6 +317,69 @@ bool isPrinterUnavailableState(const char *state) {
          || (strcmp(state, "N/A") == 0);
 }
 
+void setupOta() {
+  if (otaInitialized || WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  String host = String(OTA_HOSTNAME_PREFIX);
+  host.toLowerCase();
+
+  ArduinoOTA.setHostname(host.c_str());
+
+#ifdef OTA_PASSWORD
+  ArduinoOTA.setPassword(OTA_PASSWORD);
+#endif
+
+  ArduinoOTA.onStart([]() {
+    otaUpdateInProgress = true;
+    Serial.println("[OTA] Start");
+  });
+
+  ArduinoOTA.onEnd([]() {
+    otaUpdateInProgress = false;
+    Serial.println("[OTA] End");
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    static unsigned int lastPercent = 255;
+    unsigned int percent = (total == 0) ? 0 : ((progress * 100U) / total);
+    if (percent != lastPercent) {
+      Serial.printf("[OTA] Progress: %u%%\n", percent);
+      lastPercent = percent;
+    }
+    esp_task_wdt_reset();
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    otaUpdateInProgress = false;
+    Serial.printf("[OTA] Error %u\n", error);
+  });
+
+  ArduinoOTA.begin();
+  otaInitialized = true;
+
+  Serial.print("[OTA] Ready: ");
+  Serial.print(host);
+  Serial.print(" @ ");
+  Serial.println(WiFi.localIP());
+}
+
+void handleOta() {
+  if (WiFi.status() != WL_CONNECTED) {
+    otaInitialized = false;
+    return;
+  }
+
+  if (!otaInitialized) {
+    setupOta();
+  }
+
+  if (otaInitialized) {
+    ArduinoOTA.handle();
+  }
+}
+
 bool isIpShowButtonPressed() {
   int primaryState = digitalRead(IP_SHOW_BUTTON_PIN);
 #if IP_SHOW_BUTTON_ACTIVE_LOW
@@ -314,6 +399,21 @@ bool isIpShowButtonPressed() {
 #else
   return primaryPressed;
 #endif
+}
+
+void displayOtaUpdating() {
+  setLightWhite();
+  matrix.fillScreen(0);
+  matrix.setTextWrap(false);
+  matrix.setTextSize(1);
+  matrix.drawRect(0, 0, 64, 32, matrix.color565(0, 128, 255));
+  matrix.setTextColor(0xFFFF);
+  matrix.setCursor(2, 4);
+  matrix.print("OTA update");
+  matrix.setTextColor(matrix.color565(0, 255, 255));
+  matrix.setCursor(2, 18);
+  matrix.print("Please wait");
+  matrix.show();
 }
 
 /**
