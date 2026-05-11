@@ -105,6 +105,7 @@ void reconnectWiFi();
 void displayPrinterPrinting(int time_left, float progress, int tool_temp, int bed_temp);
 void displayPrinterReady(int tool_temp, int bed_temp);
 void displayPrusaLinkOffline();
+bool isPrinterUnavailableState(const char *state);
 int scaleFloatToInteger(float progress);
 void printPrusaLinkDebug();
 // ---------------------------
@@ -186,6 +187,12 @@ void loop() {
       prusaLinkWasOffline = false;
       // Feed the watchdog again after the first successful API call
       esp_task_wdt_reset();
+      // PrusaLink can be reachable while the printer itself is disconnected.
+      if (prusaLink.printerStats.printerConnectionKnown && !prusaLink.printerStats.printerConnected) {
+        displayPrusaLinkOffline();
+        Serial.println("[PrusaLink] Printer disconnected (status_printer.ok=false)");
+        return;
+      }
       // State: Printer is printing
       if (prusaLink.printerStats.printerStatePrinting) {
         if (prusaLink.getJobInfo()) {
@@ -203,6 +210,12 @@ void loop() {
       else if (prusaLink.printerStats.printerStateReady) {
         displayPrinterReady(prusaLink.printerStats.printerTool0TempActual, prusaLink.printerStats.printerBedTempActual);
       }
+      // Handle states where PrusaLink is reachable, but the printer is not.
+      else if (isPrinterUnavailableState(prusaLink.printerStats.printerState)) {
+        displayPrusaLinkOffline();
+        Serial.print("[PrusaLink] Printer unavailable state: ");
+        Serial.println(prusaLink.printerStats.printerState);
+      }
       // Other states (paused, finished, busy, etc.) can be handled here if needed
       else {
         // For now, treat other states like "Ready"
@@ -219,17 +232,30 @@ void loop() {
       Serial.print("[PrusaLink] HTTP Error Body: ");
       Serial.println(prusaLink.httpErrorBody);
 
+      // If PrusaLink itself is down (e.g. printer powered off on integrated setups),
+      // switch the display off immediately instead of showing stale temperatures.
+      displayPrusaLinkOffline();
+
       if (!prusaLinkWasOffline) {
         prusaLinkLostSince = currentMillis;
         prusaLinkWasOffline = true;
-      } else if (currentMillis - prusaLinkLostSince >= 3000) {
-        displayPrusaLinkOffline();
       }
     }
   }
 
   // Feed the watchdog one last time to be safe
   esp_task_wdt_reset();
+}
+
+bool isPrinterUnavailableState(const char *state) {
+  if (state == nullptr) {
+    return true;
+  }
+
+  return (strcmp(state, "OFFLINE") == 0)
+         || (strcmp(state, "UNKNOWN") == 0)
+         || (strcmp(state, "DISCONNECTED") == 0)
+         || (strcmp(state, "N/A") == 0);
 }
 
 /**

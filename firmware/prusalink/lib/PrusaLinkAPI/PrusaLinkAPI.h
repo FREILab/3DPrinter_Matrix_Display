@@ -31,6 +31,8 @@ struct prusaLinkStatistics {
   bool printerStateReady;
   bool printerStateBusy;
   bool printerStateFinished;
+  bool printerConnectionKnown;
+  bool printerConnected;
   float printerBedTempActual;
   float printerBedTempTarget;
   float printerTool0TempActual;

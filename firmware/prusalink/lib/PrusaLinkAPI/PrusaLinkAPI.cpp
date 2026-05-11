@@ -180,6 +180,16 @@ bool PrusaLinkApi::getPrinterStatus() {
   strncpy(printerStats.printerState, stateStr, sizeof(printerStats.printerState) - 1);
   printerStats.printerState[sizeof(printerStats.printerState) - 1] = '\0';
 
+  // PrusaLink may expose serial/printer connection status in status_printer.
+  JsonVariant statusPrinterOk = root["printer"]["status_printer"]["ok"];
+  if (!statusPrinterOk.isNull()) {
+    printerStats.printerConnectionKnown = true;
+    printerStats.printerConnected = statusPrinterOk.as<bool>();
+  } else {
+    printerStats.printerConnectionKnown = false;
+    printerStats.printerConnected = true;
+  }
+
   printerStats.printerStatePrinting = (strcmp(printerStats.printerState, "PRINTING") == 0);
   printerStats.printerStatePaused = (strcmp(printerStats.printerState, "PAUSED") == 0);
   printerStats.printerStateError = (strcmp(printerStats.printerState, "ERROR") == 0) || (strcmp(printerStats.printerState, "ATTENTION") == 0);
@@ -192,6 +202,12 @@ bool PrusaLinkApi::getPrinterStatus() {
 
   printerStats.printerTool0TempActual = root["printer"]["temp_nozzle"];
   printerStats.printerTool0TempTarget = root["printer"]["target_nozzle"];
+
+  if (_debug && printerStats.printerConnectionKnown && !printerStats.printerConnected) {
+    const char* msg = root["printer"]["status_printer"]["message"] | "printer disconnected";
+    Serial.print("status_printer not connected: ");
+    Serial.println(msg);
+  }
 
   return true;
 }
