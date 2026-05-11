@@ -67,6 +67,10 @@ uint8_t oePin = 14;
 #define PIN_GREEN A2  // Green channel
 #define PIN_BLUE  A3  // Blue channel
 
+#ifndef STATUS_LED_ACTIVE_LOW
+  #define STATUS_LED_ACTIVE_LOW 0
+#endif
+
 #ifndef IP_SHOW_BUTTON_PIN
   #define IP_SHOW_BUTTON_PIN 0 // Fallback: BOOT/User button (active low)
 #endif
@@ -129,6 +133,8 @@ void reconnectWiFi();
 void setupOta();
 void handleOta();
 void displayOtaUpdating();
+void setStatusLight(bool redOn, bool greenOn, bool blueOn);
+void setLightOff();
 void setLightWhite();
 void displayPrinterPrinting(int time_left, float progress, int tool_temp, int bed_temp);
 void displayPrinterReady(int tool_temp, int bed_temp);
@@ -163,10 +169,8 @@ void setup() {
   pinMode(IP_SHOW_BUTTON_ALT_PIN, INPUT_PULLUP);
 #endif
   
-  // Start with the light off
-  digitalWrite(PIN_RED, LOW);
-  digitalWrite(PIN_GREEN, LOW);
-  digitalWrite(PIN_BLUE, LOW);
+  // Start with the light off (respects STATUS_LED_ACTIVE_LOW)
+  setLightOff();
 
   Serial.println("[System] Starting up...");
   // enable debug
@@ -476,9 +480,7 @@ void reconnectWiFi() {
  */
 void setLightOff() {
   Serial.println("[StatusLight] Setting light to OFF");
-  digitalWrite(PIN_RED, LOW);
-  digitalWrite(PIN_GREEN, LOW);
-  digitalWrite(PIN_BLUE, LOW);
+  setStatusLight(false, false, false);
 }
 
 /**
@@ -488,9 +490,7 @@ void setLightOff() {
  */
 void setLightGreen() {
   Serial.println("[StatusLight] Setting light to GREEN");
-  digitalWrite(PIN_RED, LOW);
-  digitalWrite(PIN_GREEN, HIGH);
-  digitalWrite(PIN_BLUE, LOW);
+  setStatusLight(false, true, false);
 }
 
 /**
@@ -501,9 +501,19 @@ void setLightGreen() {
  */
 void setLightWhite() {
   Serial.println("[StatusLight] Setting light to WHITE");
-  digitalWrite(PIN_RED, HIGH);
-  digitalWrite(PIN_GREEN, HIGH);
-  digitalWrite(PIN_BLUE, HIGH);
+  setStatusLight(true, true, true);
+}
+
+void setStatusLight(bool redOn, bool greenOn, bool blueOn) {
+#if STATUS_LED_ACTIVE_LOW
+  digitalWrite(PIN_RED, redOn ? LOW : HIGH);
+  digitalWrite(PIN_GREEN, greenOn ? LOW : HIGH);
+  digitalWrite(PIN_BLUE, blueOn ? LOW : HIGH);
+#else
+  digitalWrite(PIN_RED, redOn ? HIGH : LOW);
+  digitalWrite(PIN_GREEN, greenOn ? HIGH : LOW);
+  digitalWrite(PIN_BLUE, blueOn ? HIGH : LOW);
+#endif
 }
 
 
