@@ -97,8 +97,11 @@ String PrusaLinkApi::sendRequestToPrusaLink(String type, String command, const c
     }
 
     now = millis();
+    unsigned long lastDataAt = now;
     while (millis() - now < PLAPI_TIMEOUT) {
+      bool gotData = false;
       while (_client->available()) {
+        gotData = true;
         char c = _client->read();
 
         if (_debug)
@@ -126,6 +129,22 @@ String PrusaLinkApi::sendRequestToPrusaLink(String type, String command, const c
           currentLineIsBlank = false;
         }
       }
+
+      if (gotData) {
+        lastDataAt = millis();
+      }
+
+      // Stop waiting once the response is fully read and no more data arrives.
+      if (finishedHeaders && !gotData && (millis() - lastDataAt > 30)) {
+        break;
+      }
+
+      // Also stop if peer closed and no buffered data is left.
+      if (!_client->connected() && !_client->available()) {
+        break;
+      }
+
+      delay(1);
     }
   } else {
     if (_debug) {

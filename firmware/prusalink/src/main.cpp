@@ -62,6 +62,20 @@ uint8_t oePin = 14;
 #define PIN_GREEN A2  // Green channel
 #define PIN_BLUE  A3  // Blue channel
 
+#ifndef IP_SHOW_BUTTON_PIN
+  #define IP_SHOW_BUTTON_PIN 0 // Fallback: BOOT/User button (active low)
+#endif
+
+#ifndef IP_SHOW_BUTTON_ACTIVE_LOW
+  #define IP_SHOW_BUTTON_ACTIVE_LOW 1
+#endif
+
+#if defined(BUTTON_DOWN)
+  #define IP_SHOW_BUTTON_ALT_PIN BUTTON_DOWN
+#elif defined(PIN_BUTTON_DOWN)
+  #define IP_SHOW_BUTTON_ALT_PIN PIN_BUTTON_DOWN
+#endif
+
 #if HEIGHT == 16
 #define NUM_ADDR_PINS 3
 #elif HEIGHT == 32
@@ -96,6 +110,9 @@ bool prusaLinkWasOffline = false;
 
 const int tempGood_T0 = 50;   // below this temperature Nozzle is considered cool
 const int tempGood_Bed = 50;  // below this temperature Bed is considered cool
+const unsigned long IP_BUTTON_AFTERGLOW_MS = 3000;
+
+unsigned long showIpUntil = 0;
 
 
 // --- Funktionsprototypen ---
@@ -105,7 +122,11 @@ void reconnectWiFi();
 void displayPrinterPrinting(int time_left, float progress, int tool_temp, int bed_temp);
 void displayPrinterReady(int tool_temp, int bed_temp);
 void displayPrusaLinkOffline();
+void displayIpAddress();
+void drawTinyGlyph(char c, int x, int y, uint16_t color);
+void drawTinyText(const String &text, int x, int y, uint16_t color);
 bool isPrinterUnavailableState(const char *state);
+bool isIpShowButtonPressed();
 int scaleFloatToInteger(float progress);
 void printPrusaLinkDebug();
 // ---------------------------
@@ -126,6 +147,10 @@ void setup() {
   pinMode(PIN_RED, OUTPUT);
   pinMode(PIN_GREEN, OUTPUT);
   pinMode(PIN_BLUE, OUTPUT);
+  pinMode(IP_SHOW_BUTTON_PIN, INPUT_PULLUP);
+#ifdef IP_SHOW_BUTTON_ALT_PIN
+  pinMode(IP_SHOW_BUTTON_ALT_PIN, INPUT_PULLUP);
+#endif
   
   // Start with the light off
   digitalWrite(PIN_RED, LOW);
@@ -160,6 +185,18 @@ void setup() {
  */
 void loop() {
   unsigned long currentMillis = millis();
+
+  // IP button: show IP while pressed and keep it visible for a short afterglow.
+  if (isIpShowButtonPressed()) {
+    showIpUntil = currentMillis + IP_BUTTON_AFTERGLOW_MS;
+  }
+
+  if (currentMillis < showIpUntil) {
+    displayIpAddress();
+    esp_task_wdt_reset();
+    return;
+  }
+
   // Check the Wi-Fi connection and API status every second
   if (currentMillis - previousMillis >= CHECK_INTERVAL) {
     previousMillis = currentMillis;
@@ -256,6 +293,27 @@ bool isPrinterUnavailableState(const char *state) {
          || (strcmp(state, "UNKNOWN") == 0)
          || (strcmp(state, "DISCONNECTED") == 0)
          || (strcmp(state, "N/A") == 0);
+}
+
+bool isIpShowButtonPressed() {
+  int primaryState = digitalRead(IP_SHOW_BUTTON_PIN);
+#if IP_SHOW_BUTTON_ACTIVE_LOW
+  bool primaryPressed = (primaryState == LOW);
+#else
+  bool primaryPressed = (primaryState == HIGH);
+#endif
+
+#ifdef IP_SHOW_BUTTON_ALT_PIN
+  int altState = digitalRead(IP_SHOW_BUTTON_ALT_PIN);
+#if IP_SHOW_BUTTON_ACTIVE_LOW
+  bool altPressed = (altState == LOW);
+#else
+  bool altPressed = (altState == HIGH);
+#endif
+  return primaryPressed || altPressed;
+#else
+  return primaryPressed;
+#endif
 }
 
 /**
@@ -562,6 +620,97 @@ void displayPrusaLinkOffline() {
 
   // Update Display
   matrix.show();
+}
+
+/**
+ * @brief Displays the current LCD IP address while the user button is pressed.
+ *
+ * If Wi-Fi is connected, shows the local IP in one line using a tiny pixel
+ * font so all octets fit on the 64x32 matrix.
+ */
+void displayIpAddress() {
+  matrix.fillScreen(0);
+  matrix.drawRect(0, 0, 64, 32, matrix.color565(0, 128, 255));
+
+  if (WiFi.status() == WL_CONNECTED) {
+    String ip = WiFi.localIP().toString();
+    int textWidth = ip.length() * 4; // 3 px glyph + 1 px spacing
+    int x = (64 - textWidth) / 2;
+    if (x < 1) {
+      x = 1;
+    }
+    drawTinyText(ip, x, 13, matrix.color565(0, 255, 255));
+  } else {
+    drawTinyText("NO WIFI", 18, 13, matrix.color565(255, 180, 0));
+  }
+
+  matrix.show();
+}
+
+void drawTinyGlyph(char c, int x, int y, uint16_t color) {
+  const uint8_t *rows = nullptr;
+
+  static const uint8_t g0[5] = {0x7, 0x5, 0x5, 0x5, 0x7};
+  static const uint8_t g1[5] = {0x2, 0x6, 0x2, 0x2, 0x7};
+  static const uint8_t g2[5] = {0x7, 0x1, 0x7, 0x4, 0x7};
+  static const uint8_t g3[5] = {0x7, 0x1, 0x7, 0x1, 0x7};
+  static const uint8_t g4[5] = {0x5, 0x5, 0x7, 0x1, 0x1};
+  static const uint8_t g5[5] = {0x7, 0x4, 0x7, 0x1, 0x7};
+  static const uint8_t g6[5] = {0x7, 0x4, 0x7, 0x5, 0x7};
+  static const uint8_t g7[5] = {0x7, 0x1, 0x1, 0x1, 0x1};
+  static const uint8_t g8[5] = {0x7, 0x5, 0x7, 0x5, 0x7};
+  static const uint8_t g9[5] = {0x7, 0x5, 0x7, 0x1, 0x7};
+  static const uint8_t gd[5] = {0x0, 0x0, 0x0, 0x2, 0x2}; // .
+  static const uint8_t gn[5] = {0x5, 0x7, 0x7, 0x7, 0x5}; // N
+  static const uint8_t go[5] = {0x0, 0x7, 0x5, 0x5, 0x7}; // O
+  static const uint8_t gw[5] = {0x5, 0x5, 0x7, 0x7, 0x5}; // W
+  static const uint8_t gi[5] = {0x2, 0x0, 0x2, 0x2, 0x2}; // I
+  static const uint8_t gf[5] = {0x7, 0x4, 0x6, 0x4, 0x4}; // F
+
+  switch (c) {
+    case '0': rows = g0; break;
+    case '1': rows = g1; break;
+    case '2': rows = g2; break;
+    case '3': rows = g3; break;
+    case '4': rows = g4; break;
+    case '5': rows = g5; break;
+    case '6': rows = g6; break;
+    case '7': rows = g7; break;
+    case '8': rows = g8; break;
+    case '9': rows = g9; break;
+    case '.': rows = gd; break;
+    case 'N': rows = gn; break;
+    case 'O': rows = go; break;
+    case 'W': rows = gw; break;
+    case 'I': rows = gi; break;
+    case 'F': rows = gf; break;
+    default: break;
+  }
+
+  if (rows == nullptr) {
+    return;
+  }
+
+  for (int row = 0; row < 5; row++) {
+    for (int col = 0; col < 3; col++) {
+      if (rows[row] & (1 << (2 - col))) {
+        matrix.drawPixel(x + col, y + row, color);
+      }
+    }
+  }
+}
+
+void drawTinyText(const String &text, int x, int y, uint16_t color) {
+  for (int i = 0; i < text.length(); i++) {
+    char c = text[i];
+    if (c >= 'a' && c <= 'z') {
+      c = c - 'a' + 'A';
+    }
+    if (c != ' ') {
+      drawTinyGlyph(c, x, y, color);
+    }
+    x += 4;
+  }
 }
 
 /**
