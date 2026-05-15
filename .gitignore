@@ -3,3 +3,5 @@
 Software/secrets/*
 firmware/octoprint/include/secret.h
 firmware/prusalink/include/secret.h
+/hardware/RGB_board/RGB_board-backups
+*.lck
