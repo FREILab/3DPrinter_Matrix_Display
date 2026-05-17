@@ -5,3 +5,4 @@ firmware/octoprint/include/secret.h
 firmware/prusalink/include/secret.h
 /hardware/RGB_board/RGB_board-backups
 *.lck
+hardware/RGB_board/_autosave-RGB_board.kicad_sch
