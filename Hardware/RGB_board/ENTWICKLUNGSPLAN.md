@@ -23,10 +23,15 @@ Aufsteckboard (Shield) für das **Adafruit Matrix Portal ESP32-S3**:
 
 ## Schaltungsblöcke
 
-### Block 1 – 12-V-Eingang
-- 2-poliges Federklemmen-Terminal, beschriftet `12V` / `GND`
+### Block 1 – Spannungsversorgung (J1, 4-polig, Phoenix 1190299)
 - Verpolungsschutz: Schottky-Diode **CDBC540-G** (40 V, 5 A, DO-214AB/SMC)
-- Eingangsfilter: keiner; der DCDC hat ausreichende Entkopüplung am Eingang.
+
+| Pin | Signal  | Funktion              |
+|-----|---------|-----------------------|
+| 1   | 12V IN  | Eingang vom Netzteil  |
+| 2   | GND     | Masse                 |
+| 3   | 5V OUT  | Ausgang Buck → Matrix Portal |
+| 4   | GND     | Masse                 |
 
 ### Block 2 – Buck Converter 12 V → 5 V (TPS563200DDCR)
 - Synchron-Schaltregler, 3 A, SOT-23-6, 5 V via R1/R2 eingestellt
@@ -40,15 +45,18 @@ Aufsteckboard (Shield) für das **Adafruit Matrix Portal ESP32-S3**:
 | R1 (Feedback) | 56,2 kΩ, 1%             | 0805    |
 | R2 (Feedback) | 10 kΩ, 1%               | 0805    |
 
-### Block 3 – 5-V-Ausgangs-Terminal
-- 2-poliges Federklemmen-Terminal für LED-Matrix-Panel (5 V / GND, bis 3 A)
-
-### Block 4 – Status-LED-Treiber (3× SI1308EDL, SOT-23)
+### Block 3 – Status-LED-Treiber (3× SI1308EDL, SOT-23) + LED-Anschluss (J2, 4-polig, Phoenix 1190299)
 12-V-RGB-LED, Common-Anode (Low-Side-Schaltung):
 - Anode gemeinsam an 12 V; je ein N-Kanal MOSFET schaltet die Kathode (R/G/B) gegen GND
 - Gate-Widerstand: 100 Ω; Gate-Pull-Down: 10 kΩ nach GND
 - Vorwiderstände für gewünschten LED-Strom auf 12 V auslegen (extern oder on-board TBD)
-- **Anschluss-Terminal (4-polig):** `+12V` | `LED_R_K` | `LED_G_K` | `LED_B_K`
+
+| Pin | Signal    | Funktion              |
+|-----|-----------|-----------------------|
+| 1   | +12V      | LED-Anode (gemeinsam) |
+| 2   | LED_R_K   | Kathode Rot → MOSFET Drain |
+| 3   | LED_G_K   | Kathode Grün → MOSFET Drain |
+| 4   | LED_B_K   | Kathode Blau → MOSFET Drain |
 
 ### Block 5 – Buchsenleiste / Montagelöcher
 - Buchsenleiste entspricht GPIO-Header des Matrix Portal ESP32-S3
@@ -92,6 +100,8 @@ Aufsteckboard (Shield) für das **Adafruit Matrix Portal ESP32-S3**:
 | 8    | 611-CDBC540-G        | CDBC540-G           | Comchip Technology        | Verpolschutz – Schottky-Diode 40 V, 5 A, DO-214AB | 1     |
 | 9    | 781-SI1308EDL-T1-GE3 | SI1308EDL-T1-GE3    | Vishay                    | LED-Treiber – N-Kanal MOSFET 30 V, 3 A, SOT-23    | 3     |
 | 10   | 603-RC0603FR-07100RL | RC0603FR-07100RL    | Yageo                     | Gate-Widerstand – 100 Ω, 1%, 0603                 | 3     |
+| 11   | 651-1190299          | 1190299             | Phoenix Contact           | Federklemme 4-polig (J1: Power, J2: LED)          | 2     |
+| 12   | TBD                  | TBD                 | TBD                       | Buchsenleiste 11-polig, 2,54 mm (Matrix Portal)   | 1     |
 
 
 ---
