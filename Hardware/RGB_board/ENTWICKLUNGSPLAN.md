@@ -101,7 +101,9 @@ Aufsteckboard (Shield) für das **Adafruit Matrix Portal ESP32-S3**:
 | 9    | 781-SI1308EDL-T1-GE3 | SI1308EDL-T1-GE3    | Vishay                    | LED-Treiber – N-Kanal MOSFET 30 V, 3 A, SOT-23    | 3     |
 | 10   | 603-RC0603FR-07100RL | RC0603FR-07100RL    | Yageo                     | Gate-Widerstand – 100 Ω, 1%, 0603                 | 3     |
 | 11   | 651-1190299          | 1190299             | Phoenix Contact           | Federklemme 4-polig (J1: Power, J2: LED)          | 2     |
-| 12   | TBD                  | TBD                 | TBD                       | Buchsenleiste 11-polig, 2,54 mm (Matrix Portal)   | 1     |
+| 12   | 649-76341-311LF      | 76341-311LF         | Amphenol FCI              | Buchsenleiste 11-polig, 2,54 mm, 7 mm hoch (auf Shield)    | 1     |
+| 13   | 200-DW1107TS200      | DW-11-07-T-S-200    | Samtec                    | Stiftleiste 11-polig, 2,54 mm, 5,08 mm hoch (Gegenstück)   | 1     |
+| 14   | 855-R30-3000902      | R30-3000902         | Harwin                    | Befestigungsbolzen M3, 9 mm, Messing                        | 4     |
 
 
 ---
