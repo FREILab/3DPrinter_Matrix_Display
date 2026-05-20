@@ -20,9 +20,9 @@
           "arrow_length": 1270000,
           "extension_offset": 500000,
           "keep_text_aligned": true,
-          "suppress_zeroes": false,
+          "suppress_zeroes": true,
           "text_position": 0,
-          "units_format": 1
+          "units_format": 0
         },
         "fab_line_width": 0.1,
         "fab_text_italic": false,
@@ -37,18 +37,18 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 2.7,
-          "height": 2.7,
-          "width": 2.7
+          "drill": 1.0,
+          "height": 1.7,
+          "width": 1.7
         },
-        "silk_line_width": 0.12,
+        "silk_line_width": 0.1,
         "silk_text_italic": false,
         "silk_text_size_h": 1.0,
         "silk_text_size_v": 1.0,
-        "silk_text_thickness": 0.15,
+        "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.2
+          "min_clearance": 0.5
         }
       },
       "diff_pair_dimensions": [],
@@ -76,7 +76,7 @@
         "footprint_type_mismatch": "ignore",
         "hole_clearance": "error",
         "hole_near_hole": "error",
-        "hole_to_hole": "error",
+        "hole_to_hole": "warning",
         "holes_co_located": "warning",
         "invalid_outline": "error",
         "isolated_copper": "warning",
@@ -119,7 +119,7 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.0,
+        "min_clearance": 0.2032,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.025,
         "min_groove_width": 0.0,
@@ -132,10 +132,10 @@
         "min_text_height": 0.8,
         "min_text_thickness": 0.08,
         "min_through_hole_diameter": 0.3,
-        "min_track_width": 0.2,
+        "min_track_width": 0.0,
         "min_via_annular_width": 0.1,
-        "min_via_diameter": 0.4,
-        "solder_mask_to_copper_clearance": 0.005,
+        "min_via_diameter": 0.5,
+        "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -460,7 +460,7 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.2,
+        "clearance": 0.2032,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
@@ -469,11 +469,83 @@
         "microvia_drill": 0.1,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 2147483647,
+        "priority": -1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.25,
-        "via_diameter": 0.8,
-        "via_drill": 0.4,
+        "track_width": 0.2,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2032,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "aref",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2032,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "lowpower",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.3048,
+        "via_diameter": 0.9064,
+        "via_drill": 0.5,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2032,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "power",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.4064,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2032,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "usbvcc",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2032,
+        "via_diameter": 0.9064,
+        "via_drill": 0.5,
         "wire_width": 6
       }
     ],
@@ -484,164 +556,16 @@
     "netclass_assignments": null,
     "netclass_patterns": [
       {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad1)"
+        "netclass": "usbvcc",
+        "pattern": "+5V"
       },
       {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad10)"
+        "netclass": "lowpower",
+        "pattern": "GND"
       },
       {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad11)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad12)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad13)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad14)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad15)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad16)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad17)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad18)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad19)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad2)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad20)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad21)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad22)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad23)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad24)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad25)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad26)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad27)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad28)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad29)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad3)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad30)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad31)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad32)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad33)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad34)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad35)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad36)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad37)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad38)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad39)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad4)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad40)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad5)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad6)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad7)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad8)"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "Net-(J1-Pad9)"
+        "netclass": "power",
+        "pattern": "VCC"
       }
     ]
   },
@@ -653,7 +577,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "../../3D_models/3D_Printer_Pi_Hat.step",
+      "step": "3D_models/3D_Printer_Pi_Hat.step",
       "svg": "",
       "vrml": ""
     },
