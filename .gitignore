@@ -7,3 +7,4 @@ firmware/prusalink/include/secret.h
 *.lck
 hardware/RGB_board/_autosave-RGB_board.kicad_sch
 hardware/RGB_board/fp-info-cache
+/hardware/RGB_board/production/backups
